@@ -12,6 +12,8 @@ def main():
     elif args.directory:
         # Process all email files in the directory
         pass
+    else:
+        print("Please provide either a file path or a directory path.")
 
 if __name__ == "__main__":
     main()
