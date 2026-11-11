@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 import os
 from pathlib import Path
+from typing import Optional
 
 from src.models.file import File
 
@@ -16,12 +17,20 @@ class FileReader:
     def __init__(self, file: File):
         self.file = file
 
-    def read_file(self) -> Iterator[str]:
+    def read_file(self) -> Optional[Iterator[bytes]]:
         if not is_supported_format(self.file):
             print(f"Skipping file: {self.file.name}. Reason: unsupported extension.")
-            return
-        with open(self.file.path, 'r', encoding='utf-8') as source:
-            yield from source
+            return None
+
+        def read_chunks() -> Iterator[bytes]:
+            with open(self.file.path, "rb") as source:
+                while True:
+                    chunk = source.read(64 * 1024)
+                    if not chunk:
+                        break
+                    yield chunk
+
+        return read_chunks()
 
 class DirectoryReader:
     def __init__(self, directory_path: str):
@@ -41,9 +50,5 @@ class DirectoryReader:
                     size=file_path.stat().st_size,
                     path=str(file_path),
                 )
-                if not is_supported_format(file):
-                    print(f"Skipping file: {file.name}. Reason: unsupported extension.")
-                    continue
-
                 self.files.append(file)
         return self.files
